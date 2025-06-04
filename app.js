@@ -5,7 +5,7 @@ const fs = require('fs').promises
 require('dotenv').config()
 
 const app = express()
-const upload = multer({ dest: 'uploads/' })
+const upload = multer({ dest: '/tmp/uploads/' })
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN
 const REPO_OWNER = process.env.REPO_OWNER
@@ -94,3 +94,5 @@ app.listen(PORT, async () => {
     console.error('Failed to set webhook:', error.message)
   }
 })
+
+module.exports = app;
