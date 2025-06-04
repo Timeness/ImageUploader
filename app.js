@@ -1,11 +1,26 @@
-const express = require('express')
-const multer = require('multer')
-const axios = require('axios')
-const fs = require('fs').promises
-require('dotenv').config()
+const express = require('express');
+const multer = require('multer');
+const axios = require('axios');
+const path = require('path');
+const fs = require('fs').promises;
+require('dotenv').config();
 
 const app = express()
-const upload = multer({ dest: '/tmp/uploads/' })
+const uploadDir = '/tmp/uploads';
+const storage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    try {
+      await fs.mkdir(uploadDir, { recursive: true });
+      cb(null, uploadDir);
+    } catch (error) {
+      cb(error);
+    }
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}_${file.originalname}`);
+  }
+});
+const upload = multer({ storage });
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN
 const REPO_OWNER = process.env.REPO_OWNER
