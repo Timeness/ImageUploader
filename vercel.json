@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/upload",
+      "methods": ["POST"],
+      "dest": "app.js"
+    },
+    {
+      "src": "/webhook/(.*)",
+      "methods": ["POST"],
+      "dest": "app.js"
+    },
+    {
+      "src": "/setWebhook",
+      "methods": ["GET"],
+      "dest": "app.js"
+    }
+  ]
+}
