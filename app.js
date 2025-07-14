@@ -6,7 +6,7 @@ const fs = require('fs').promises;
 require('dotenv').config();
 
 const app = express()
-const uploadDir = '/tmp/uploads';
+const uploadDir = '/uploads';
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
     try {
