@@ -22,7 +22,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Validate environment variables
 const requiredEnvVars = ['GITHUB_TOKEN', 'REPO_OWNER', 'REPO_NAME', 'TELEGRAM_TOKEN', 'WEBHOOK_URL'];
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
@@ -37,7 +36,6 @@ const REPO_NAME = process.env.REPO_NAME;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const WEBHOOK_URL = process.env.WEBHOOK_URL.replace(/\/$/, '');
 
-// Middleware to log incoming requests
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
   next();
@@ -45,7 +43,6 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// Validate GitHub token on startup
 async function validateGitHubToken() {
   try {
     const response = await axios.get('https://api.github.com/user', {
@@ -63,7 +60,6 @@ async function validateGitHubToken() {
   }
 }
 
-// Function to check if file exists in GitHub
 async function checkFileExists(repoOwner, repoName, filePath, githubToken) {
   try {
     const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
@@ -73,21 +69,19 @@ async function checkFileExists(repoOwner, repoName, filePath, githubToken) {
         Accept: 'application/vnd.github.v3+json',
       },
     });
-    return true; // File exists
+    return true;
   } catch (error) {
-    if (error.response?.status === 404) return false; // File does not exist
-    throw error; // Other errors (e.g., 401, 403)
+    if (error.response?.status === 404) return false;
+    throw error;
   }
 }
 
-// Function to upload image to GitHub
 async function uploadImageToGitHub(imagePath, repoOwner, repoName, uploadPath, githubToken, branch = 'main', commitMessage = 'Upload image via API') {
   try {
     const imageBuffer = await fs.readFile(imagePath);
     const encodedImage = imageBuffer.toString('base64');
     const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${uploadPath}`;
     
-    // Check if file exists to get SHA for update
     let payload = {
       message: commitMessage,
       content: encodedImage,
@@ -102,7 +96,7 @@ async function uploadImageToGitHub(imagePath, repoOwner, repoName, uploadPath, g
           Accept: 'application/vnd.github.v3+json',
         },
       });
-      payload.sha = existingFile.data.sha; // Include SHA for updating existing file
+      payload.sha = existingFile.data.sha;
     }
 
     const response = await axios.put(url, payload, {
@@ -118,7 +112,6 @@ async function uploadImageToGitHub(imagePath, repoOwner, repoName, uploadPath, g
   }
 }
 
-// Endpoint to handle image uploads via HTTP
 app.post('/upload', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -134,7 +127,6 @@ app.post('/upload', upload.single('image'), async (req, res) => {
   }
 });
 
-// Webhook endpoint for Telegram
 app.post(`/webhook/${TELEGRAM_TOKEN}`, async (req, res) => {
   let tempPath;
   try {
@@ -180,7 +172,6 @@ app.post(`/webhook/${TELEGRAM_TOKEN}`, async (req, res) => {
   }
 });
 
-// Endpoint to set Telegram webhook
 app.get('/setWebhook', async (req, res) => {
   try {
     const webhookUrl = `${WEBHOOK_URL}/webhook/${TELEGRAM_TOKEN}`;
@@ -193,7 +184,6 @@ app.get('/setWebhook', async (req, res) => {
   }
 });
 
-// Endpoint to get webhook info
 app.get('/getWebhookInfo', async (req, res) => {
   try {
     const response = await axios.get(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/getWebhookInfo`);
@@ -208,7 +198,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   try {
-    await validateGitHubToken(); // Validate GitHub token on startup
+    await validateGitHubToken();
     const webhookUrl = `${WEBHOOK_URL}/webhook/${TELEGRAM_TOKEN}`;
     const response = await axios.get(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=${webhookUrl}`);
     console.log('Webhook set successfully:', response.data);
